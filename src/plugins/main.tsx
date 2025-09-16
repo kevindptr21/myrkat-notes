@@ -1,0 +1,230 @@
+import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { BlockNoteView } from '@blocknote/shadcn'
+import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core'
+import { useCreateBlockNote } from '@blocknote/react'
+import { NotebookPenIcon, WorkflowIcon } from 'lucide-react'
+import type { Note } from './types'
+import type { StorageRequestPayload } from '@/storage/service'
+import '@blocknote/core/fonts/inter.css'
+import '@blocknote/shadcn/style.css'
+import { useDebounceCallback } from '@/hooks/use-debounce-callback'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
+import '@excalidraw/excalidraw/index.css'
+
+// Dynamically import Excalidraw only on the client side
+const Excalidraw = lazy(() =>
+  import('@excalidraw/excalidraw').then((module) => ({
+    default: module.Excalidraw,
+  })),
+)
+
+const schema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+  },
+})
+
+const EditorComponent = ({
+  note,
+  onChange,
+}: {
+  note: Note
+  onChange: (content: string) => void
+}) => {
+  const editor = useCreateBlockNote({
+    schema,
+    initialContent: note.content ? JSON.parse(note.content) : undefined,
+    codeBlock: {
+      indentLineWithTab: true,
+      defaultLanguage: 'plain',
+      supportedLanguages: {
+        plain: {
+          name: 'Plain Text',
+          aliases: ['txt'],
+        },
+        typescript: {
+          name: 'Typescript',
+          aliases: ['ts'],
+        },
+        javascript: {
+          name: 'Javascript',
+          aliases: ['js'],
+        },
+        vue: {
+          name: 'Vue',
+          aliases: ['vue'],
+        },
+      },
+      // TODO: highlighter
+    },
+  })
+
+  return (
+    <BlockNoteView
+      editor={editor}
+      theme="light"
+      onChange={() => {
+        onChange(JSON.stringify(editor.document))
+      }}
+    />
+  )
+}
+
+const ExcalidrawComponent = ({
+  note,
+  onChange,
+  onLibraryChange,
+}: {
+  note: Note
+  onChange: (elements: any) => void
+  onLibraryChange: (libraryItems: any) => void
+}) => {
+  return (
+    <Suspense fallback={<Skeleton className="h-full w-full" />}>
+      <Excalidraw
+        initialData={{
+          elements: note.excalidraw ? JSON.parse(note.excalidraw) : [],
+          libraryItems: note.excalidrawLibrary
+            ? JSON.parse(note.excalidrawLibrary)
+            : [],
+        }}
+        onChange={onChange}
+        onLibraryChange={onLibraryChange}
+      />
+    </Suspense>
+  )
+}
+
+export const NotesMainView = () => {
+  const queryClient = useQueryClient()
+  const { events } = useMyrkat()
+  const [noteTabStates, setNoteTabStates] = useState<
+    Record<string, 'editor' | 'excalidraw'>
+  >({})
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
+  const [excalidrawElStr, setExcalidrawElStr] = useState<string | undefined>(
+    undefined,
+  )
+  const [excalidrawLibraryStr, setExcalidrawLibraryStr] = useState<
+    string | undefined
+  >(undefined)
+  const selectedNoteRef = useRef<Note | null>(null)
+  selectedNoteRef.current = selectedNote
+
+  const { mutate: updateNote } = useMutation({
+    mutationKey: ['update-note'],
+    mutationFn: async (data: Partial<Note> & { id: string }) => {
+      const { id, ...updateData } = data
+      const payload: StorageRequestPayload = {
+        operation: 'update',
+        tableName: 'notes',
+        where: { id },
+        data: updateData,
+      }
+      return events.request('storage:request', payload)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+  })
+
+  const handleContentChange = useDebounceCallback((content: string) => {
+    if (selectedNoteRef.current) {
+      updateNote({ id: selectedNoteRef.current.id, content })
+    }
+  }, 500)
+
+  const handleExcalidrawChange = useDebounceCallback((elements) => {
+    setExcalidrawElStr(JSON.stringify(elements))
+  }, 500)
+
+  const handleExcalidrawLibraryChange = useDebounceCallback((libraryItems) => {
+    setExcalidrawLibraryStr(JSON.stringify(libraryItems))
+  }, 500)
+
+  useEffect(() => {
+    const handleNoteSelection = (note: unknown) => {
+      if (!note) {
+        setSelectedNote(null)
+        setExcalidrawElStr(undefined)
+        setExcalidrawLibraryStr(undefined)
+        return
+      }
+
+      const selected = note as Note
+      setSelectedNote(selected)
+      setExcalidrawElStr(selected.excalidraw)
+      setExcalidrawLibraryStr(selected.excalidrawLibrary)
+    }
+
+    events.subscribe('note:selected', handleNoteSelection)
+
+    return () => events.unsubscribe('note:selected', handleNoteSelection)
+  }, [events])
+
+  useEffect(() => {
+    if (selectedNoteRef.current) {
+      updateNote({
+        id: selectedNoteRef.current.id,
+        excalidraw: excalidrawElStr,
+      })
+    }
+  }, [excalidrawElStr, updateNote])
+
+  useEffect(() => {
+    if (selectedNoteRef.current) {
+      updateNote({
+        id: selectedNoteRef.current.id,
+        excalidrawLibrary: excalidrawLibraryStr,
+      })
+    }
+  }, [excalidrawLibraryStr, updateNote])
+
+  if (!selectedNote) {
+    return (
+      <div className="flex h-full items-center justify-center text-gray-500">
+        Select a note from the sidebar to start editing.
+      </div>
+    )
+  }
+
+  const activeTab = noteTabStates[selectedNote.id] || 'editor'
+
+  return (
+    <Tabs
+      value={activeTab}
+      className="flex h-full flex-col"
+      onValueChange={(value) => {
+        setNoteTabStates((prev) => ({
+          ...prev,
+          [selectedNote.id]: value as 'editor' | 'excalidraw',
+        }))
+      }}
+    >
+      <TabsList>
+        <TabsTrigger value="editor">
+          <NotebookPenIcon />
+        </TabsTrigger>
+        <TabsTrigger value="excalidraw">
+          <WorkflowIcon />
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="editor" className="flex-grow">
+        <EditorComponent
+          key={selectedNote.id}
+          note={selectedNote}
+          onChange={handleContentChange}
+        />
+      </TabsContent>
+      <TabsContent value="excalidraw" className="flex-grow">
+        <ExcalidrawComponent
+          key={selectedNote.id}
+          note={selectedNote}
+          onChange={handleExcalidrawChange}
+          onLibraryChange={handleExcalidrawLibraryChange}
+        />
+      </TabsContent>
+    </Tabs>
+  )
+}
