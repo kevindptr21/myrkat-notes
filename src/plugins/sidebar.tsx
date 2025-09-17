@@ -94,7 +94,11 @@ export const NotesSidebar = () => {
 
       return events.request('storage:request', payload)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+    onSuccess: (updated) => {
+      const note = (updated as Array<Note>)[0]
+      events.publish('note:selected', note)
+      return queryClient.invalidateQueries({ queryKey: ['notes'] })
+    },
   })
 
   const { mutate: deleteNote } = useMutation({

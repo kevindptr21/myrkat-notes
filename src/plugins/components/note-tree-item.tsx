@@ -88,8 +88,9 @@ export const NoteTreeItem = ({
         className={cn(
           'group hover:bg-primary/90 flex cursor-pointer items-center gap-1 rounded-md p-2 hover:text-white',
           {
-            'bg-primary text-white': activeNoteId && activeNoteId === note.id,
-            'hover:bg-primary': isEditing,
+            'bg-primary text-white':
+              activeNoteId && activeNoteId === note.id && !isEditing,
+            'hover:bg-primary-foreground hover:text-primary': isEditing,
           },
         )}
         style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}

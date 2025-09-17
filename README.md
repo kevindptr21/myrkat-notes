@@ -1,5 +1,8 @@
-# Welcome to Myrkat Plugin Template
+# Myrkat Notes Plugin
 
-This is a minimum setup to create a plugin that can consume in Mrykat App.
-All you need todo is just create a new dir inside `src` called `plugins` and provide the entry point by `index.ts`.
-Example [docs](https://github.com/kevindptr21/myrkat-notes)
+This is a part of [Myrkat App](https://github.com/kevindptr21/myrkat-app) or can be used as is.
+
+## Features
+
+- Notion-like notes taking by [BlockNote](https://github.com/TypeCellOS/BlockNote)
+- Virtual hand-drawn style whiteboard by [Excalidraw](https://github.com/excalidraw/excalidraw)

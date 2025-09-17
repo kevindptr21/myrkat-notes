@@ -3,7 +3,10 @@ import React from 'react'
 
 export const MainViewPluginRenderer = () => {
   const { plugins } = useMyrkat()
-  const mainComponents = plugins.getMainViewComponents()
+  const mainComponents = plugins
+    .getPlugins()
+    .map((p) => p.mainComponent)
+    .filter(Boolean)
 
   if (mainComponents.length === 0) {
     return <div>No main plugins loaded.</div>
@@ -11,9 +14,9 @@ export const MainViewPluginRenderer = () => {
 
   return (
     <>
-      {mainComponents.map(({ id, component: Component }) => (
-        <React.Fragment key={id}>
-          <Component />
+      {mainComponents.map((Component, index) => (
+        <React.Fragment key={index}>
+          {Component && <Component />}
         </React.Fragment>
       ))}
     </>

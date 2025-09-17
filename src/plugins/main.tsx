@@ -1,18 +1,23 @@
 import { useMyrkat } from '@kevindptr/myrkat-sdk'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { BlockNoteView } from '@blocknote/shadcn'
-import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core'
-import { useCreateBlockNote } from '@blocknote/react'
-import { NotebookPenIcon, WorkflowIcon } from 'lucide-react'
+import { FileTextIcon, NotebookPenIcon, WorkflowIcon } from 'lucide-react'
 import type { Note } from './types'
 import type { StorageRequestPayload } from '@/storage/service'
-import '@blocknote/core/fonts/inter.css'
-import '@blocknote/shadcn/style.css'
 import { useDebounceCallback } from '@/hooks/use-debounce-callback'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import '@excalidraw/excalidraw/index.css'
+import '@blocknote/core/fonts/inter.css'
+import '@blocknote/mantine/style.css'
+import { Editor } from './components/editor'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 // Dynamically import Excalidraw only on the client side
 const Excalidraw = lazy(() =>
@@ -20,58 +25,6 @@ const Excalidraw = lazy(() =>
     default: module.Excalidraw,
   })),
 )
-
-const schema = BlockNoteSchema.create({
-  blockSpecs: {
-    ...defaultBlockSpecs,
-  },
-})
-
-const EditorComponent = ({
-  note,
-  onChange,
-}: {
-  note: Note
-  onChange: (content: string) => void
-}) => {
-  const editor = useCreateBlockNote({
-    schema,
-    initialContent: note.content ? JSON.parse(note.content) : undefined,
-    codeBlock: {
-      indentLineWithTab: true,
-      defaultLanguage: 'plain',
-      supportedLanguages: {
-        plain: {
-          name: 'Plain Text',
-          aliases: ['txt'],
-        },
-        typescript: {
-          name: 'Typescript',
-          aliases: ['ts'],
-        },
-        javascript: {
-          name: 'Javascript',
-          aliases: ['js'],
-        },
-        vue: {
-          name: 'Vue',
-          aliases: ['vue'],
-        },
-      },
-      // TODO: highlighter
-    },
-  })
-
-  return (
-    <BlockNoteView
-      editor={editor}
-      theme="light"
-      onChange={() => {
-        onChange(JSON.stringify(editor.document))
-      }}
-    />
-  )
-}
 
 const ExcalidrawComponent = ({
   note,
@@ -194,7 +147,7 @@ export const NotesMainView = () => {
   return (
     <Tabs
       value={activeTab}
-      className="flex h-full flex-col"
+      className="relative grid h-full grid-cols-[auto_1fr] pt-8"
       onValueChange={(value) => {
         setNoteTabStates((prev) => ({
           ...prev,
@@ -202,22 +155,45 @@ export const NotesMainView = () => {
         }))
       }}
     >
-      <TabsList>
-        <TabsTrigger value="editor">
-          <NotebookPenIcon />
-        </TabsTrigger>
-        <TabsTrigger value="excalidraw">
-          <WorkflowIcon />
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="editor" className="flex-grow">
-        <EditorComponent
+      <div className="flex flex-col">
+        <TabsList className="sticky top-12 flex h-fit flex-col gap-2 space-x-0 p-1">
+          <TabsTrigger value="editor">
+            <NotebookPenIcon />
+          </TabsTrigger>
+          <TabsTrigger value="excalidraw">
+            <WorkflowIcon />
+          </TabsTrigger>
+        </TabsList>
+
+        <Tooltip>
+          <TooltipTrigger
+            className={cn('sticky top-32 hidden', {
+              block: activeTab === 'editor',
+            })}
+            asChild
+          >
+            <Button
+              variant="outline"
+              className="rounded-md"
+              onClick={() => events.publish('note:export-pdf')}
+            >
+              <FileTextIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>Export PDF</span>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
+      <TabsContent value="editor" className="block h-full">
+        <Editor
           key={selectedNote.id}
           note={selectedNote}
           onChange={handleContentChange}
         />
       </TabsContent>
-      <TabsContent value="excalidraw" className="flex-grow">
+      <TabsContent value="excalidraw" className="block h-full">
         <ExcalidrawComponent
           key={selectedNote.id}
           note={selectedNote}
