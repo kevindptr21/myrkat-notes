@@ -103,7 +103,6 @@ export const Editor = ({
   )
 
   const onDownloadClick = async () => {
-    console.log(note.title)
     const exporter = new PDFExporter(editor.schema, pdfDefaultSchemaMappings)
     const pdfDocument = await exporter.toReactPDFDocument(editor.document)
 
@@ -128,8 +127,6 @@ export const Editor = ({
     window.URL.revokeObjectURL(link.href)
   }
 
-  console.log({ note: note.title })
-
   useEffect(() => {
     events.subscribe('note:export-pdf', onDownloadClick)
 
@@ -139,6 +136,7 @@ export const Editor = ({
   return (
     <Fragment>
       <BlockNoteView
+        autoFocus
         editor={editor}
         theme="light"
         onChange={() => {

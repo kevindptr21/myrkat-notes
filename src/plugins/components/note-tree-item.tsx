@@ -44,6 +44,8 @@ interface NoteTreeItemProps {
   >
   deleteNote: UseMutateFunction<any, Error, string, unknown>
   activeNoteId: string | null
+  isExpanded: boolean
+  onToggleExpand: (noteId: string) => void
 }
 
 export const NoteTreeItem = ({
@@ -53,9 +55,10 @@ export const NoteTreeItem = ({
   updateNote,
   deleteNote,
   activeNoteId,
+  isExpanded,
+  onToggleExpand,
 }: NoteTreeItemProps) => {
   const { events } = useMyrkat()
-  const [isOpen, setIsOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(note.title)
@@ -83,7 +86,7 @@ export const NoteTreeItem = ({
   }, [isEditing])
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible open={isExpanded} onOpenChange={() => onToggleExpand(note.id)}>
       <div
         className={cn(
           'group hover:bg-primary/90 flex cursor-pointer items-center gap-1 rounded-md p-2 hover:text-white',
@@ -105,7 +108,7 @@ export const NoteTreeItem = ({
               onClick={(e) => e.stopPropagation()}
               className="rounded-sm p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
             >
-              {isOpen ? (
+              {isExpanded ? (
                 <FolderOpenIcon className="size-4" />
               ) : (
                 <FolderIcon className="size-4" />
@@ -145,7 +148,7 @@ export const NoteTreeItem = ({
               onClick={(e) => {
                 e.stopPropagation()
                 createNote(note.id)
-                setIsOpen(true)
+                onToggleExpand(note.id)
               }}
               className="h-fit w-fit rounded-sm p-1!"
             >
@@ -206,6 +209,8 @@ export const NoteTreeItem = ({
               updateNote={updateNote}
               deleteNote={deleteNote}
               activeNoteId={activeNoteId}
+              isExpanded={isExpanded}
+              onToggleExpand={onToggleExpand}
             />
           ))}
         </CollapsibleContent>

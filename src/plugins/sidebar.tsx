@@ -4,12 +4,14 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NoteTreeItem } from './components/note-tree-item'
 import type { NoteTree } from './components/note-tree-item'
 import type { Note } from './types'
 import type { StorageRequestPayload } from '@/storage/service'
 import { Button } from '@/components/ui/button'
+import { SearchIcon } from 'lucide-react'
+import { SearchNotes } from './components/search-notes'
 
 // Utility to build the note hierarchy
 const buildNoteTree = (notes: Array<Note>): Array<NoteTree> => {
@@ -35,14 +37,7 @@ export const NotesSidebar = () => {
   const queryClient = useQueryClient()
   const { events } = useMyrkat()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const handleNoteSelection = (note: unknown) => {
-      setActiveNoteId((note as Note).id)
-    }
-    events.subscribe('note:selected', handleNoteSelection)
-    return () => events.unsubscribe('note:selected', handleNoteSelection)
-  }, [])
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(new Set())
 
   const { data: notes } = useSuspenseQuery({
     queryKey: ['notes'],
@@ -119,16 +114,77 @@ export const NotesSidebar = () => {
     },
   })
 
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string>()
+    notes.forEach((note) => {
+      if (note.parentId) {
+        map.set(note.id, note.parentId)
+      }
+    })
+    return map
+  }, [notes])
+
+  const getNoteAncestors = (noteId: string | null): Set<string> => {
+    const ancestors = new Set<string>()
+    let currentNoteId = noteId
+    while (currentNoteId) {
+      const parentId = parentMap.get(currentNoteId)
+      if (parentId) {
+        ancestors.add(parentId)
+        currentNoteId = parentId
+      } else {
+        currentNoteId = null
+      }
+    }
+    return ancestors
+  }
+
+  const handleToggleExpand = (noteId: string) => {
+    setExpandedNoteIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId)
+      } else {
+        newSet.add(noteId)
+      }
+      return newSet
+    })
+  }
+
+  useEffect(() => {
+    const handleNoteSelection = (note: unknown) => {
+      const selectedNote = note as Note
+      setActiveNoteId(selectedNote.id)
+      // Expand all ancestors of the selected note
+      setExpandedNoteIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.add(selectedNote.id) // Also expand the selected note itself
+        getNoteAncestors(selectedNote.id).forEach((ancestorId) =>
+          newSet.add(ancestorId),
+        )
+        return newSet
+      })
+    }
+    events.subscribe('note:selected', handleNoteSelection)
+    return () => events.unsubscribe('note:selected', handleNoteSelection)
+  }, [events, getNoteAncestors])
+
   const noteTree = buildNoteTree(notes)
 
   return (
     <div className="p-2">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-lg font-bold">Notes</h3>
-        <Button variant="outline" size="sm" onClick={() => createNote(null)}>
-          New
-        </Button>
+
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={() => createNote(null)}>
+            New
+          </Button>
+
+          <SearchNotes />
+        </div>
       </div>
+
       <div className="space-y-1">
         {noteTree?.map((note) => (
           <NoteTreeItem
@@ -138,6 +194,8 @@ export const NotesSidebar = () => {
             updateNote={updateNote}
             deleteNote={deleteNote}
             activeNoteId={activeNoteId}
+            isExpanded={expandedNoteIds.has(note.id)}
+            onToggleExpand={handleToggleExpand}
           />
         ))}
       </div>
