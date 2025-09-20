@@ -227,29 +227,6 @@ export function SearchNotes() {
                   No results found.
                 </li>
               )}
-
-              {/* {filteredNotes.map((note, index) => ( */}
-              {/*   <li key={note.id} tabIndex={-1} className="focus:outline-none"> */}
-              {/*     <Button */}
-              {/*       variant="ghost" */}
-              {/*       className={cn( */}
-              {/*         'w-full justify-start', */}
-              {/*         index === activeIndex && */}
-              {/*           'bg-accent text-accent-foreground', */}
-              {/*       )} */}
-              {/*       onClick={() => { */}
-              {/*         events.publish('note:selected', { */}
-              {/*           ...note, */}
-              {/*           content: JSON.stringify(note.content), */}
-              {/*         }) */}
-              {/*         setSearch('') */}
-              {/*         setOpen(false) */}
-              {/*       }} */}
-              {/*     > */}
-              {/*       {note.title} */}
-              {/*     </Button> */}
-              {/*   </li> */}
-              {/* ))} */}
             </ul>
           </div>
         </DialogContent>

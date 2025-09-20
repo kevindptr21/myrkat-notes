@@ -2,6 +2,7 @@
 import { NotesSidebar } from './sidebar'
 import { NotesMainView } from './main'
 import type { PluginManager } from '@kevindptr/myrkat-sdk'
+import { NotesLogo } from './logo'
 
 /**
  * Registers the Notes Plugin and its components.
@@ -11,6 +12,7 @@ export function register(pluginManager: PluginManager) {
   pluginManager.registerPlugin({
     id: 'myrkat-notes',
     name: 'Myrkat Notes',
+    logo: NotesLogo,
     sidebarComponent: NotesSidebar,
     mainComponent: NotesMainView,
   })
