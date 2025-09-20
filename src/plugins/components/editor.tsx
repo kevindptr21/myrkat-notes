@@ -136,7 +136,6 @@ export const Editor = ({
   return (
     <Fragment>
       <BlockNoteView
-        autoFocus
         editor={editor}
         theme="light"
         onChange={() => {

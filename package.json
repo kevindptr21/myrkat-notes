@@ -19,7 +19,7 @@
     "@blocknote/xl-multi-column": "0.37.0",
     "@blocknote/xl-pdf-exporter": "0.37.0",
     "@excalidraw/excalidraw": "^0.18.0",
-    "@kevindptr/myrkat-sdk": "0.1.1-alpha.0",
+    "@kevindptr/myrkat-sdk": "0.1.1-alpha.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",

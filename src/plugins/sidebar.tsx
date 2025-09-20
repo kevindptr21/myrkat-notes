@@ -1,16 +1,15 @@
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { useMyrkat, useVirtualizer } from '@kevindptr/myrkat-sdk'
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NoteTreeItem } from './components/note-tree-item'
 import type { NoteTree } from './components/note-tree-item'
 import type { Note } from './types'
 import type { StorageRequestPayload } from '@/storage/service'
 import { Button } from '@/components/ui/button'
-import { SearchIcon } from 'lucide-react'
 import { SearchNotes } from './components/search-notes'
 
 // Utility to build the note hierarchy
@@ -170,6 +169,25 @@ export const NotesSidebar = () => {
   }, [events, getNoteAncestors])
 
   const noteTree = buildNoteTree(notes)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  const virtualizer = useVirtualizer({
+    count: noteTree.length,
+    estimateSize: () => 35,
+    overscan: 5,
+    getScrollElement: () => scrollRef.current,
+  })
+
+  const virtualItems = virtualizer.getVirtualItems()
+
+  useEffect(() => {
+    if (activeNoteId) {
+      const element = document.getElementById(activeNoteId)
+      element?.scrollIntoView({
+        behavior: 'smooth',
+      })
+    }
+  }, [activeNoteId])
 
   return (
     <div className="p-2">
@@ -185,19 +203,48 @@ export const NotesSidebar = () => {
         </div>
       </div>
 
-      <div className="space-y-1">
-        {noteTree?.map((note) => (
-          <NoteTreeItem
-            key={note.id}
-            note={note}
-            createNote={createNote}
-            updateNote={updateNote}
-            deleteNote={deleteNote}
-            activeNoteId={activeNoteId}
-            isExpanded={expandedNoteIds.has(note.id)}
-            onToggleExpand={handleToggleExpand}
-          />
-        ))}
+      <div ref={scrollRef} className="h-[45rem] overflow-auto">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              // minHeight: 200,
+              transform: `translateY(${virtualItems?.[0]?.start}px)`,
+            }}
+          >
+            {virtualItems.map((vi) => {
+              const note = noteTree[vi.index]
+
+              return (
+                <div
+                  key={vi.key}
+                  data-index={vi.index}
+                  ref={virtualizer.measureElement}
+                >
+                  <NoteTreeItem
+                    key={note.id}
+                    note={note}
+                    createNote={createNote}
+                    updateNote={updateNote}
+                    deleteNote={deleteNote}
+                    activeNoteId={activeNoteId}
+                    isExpanded={expandedNoteIds.has(note.id)}
+                    onToggleExpand={handleToggleExpand}
+                  />
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )

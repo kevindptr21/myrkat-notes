@@ -104,19 +104,23 @@ export const NoteTreeItem = ({
       >
         {hasChildren ? (
           <CollapsibleTrigger asChild>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={(e) => e.stopPropagation()}
-              className="rounded-sm p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="h-fit w-fit rounded-sm p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               {isExpanded ? (
                 <FolderOpenIcon className="size-4" />
               ) : (
                 <FolderIcon className="size-4" />
               )}
-            </button>
+            </Button>
           </CollapsibleTrigger>
         ) : (
-          <NotepadText className="size-4" />
+          <Button variant="ghost" size="icon" className="h-fit w-fit p-0.5">
+            <NotepadText className="size-4" />
+          </Button>
         )}
         {isEditing ? (
           <Input

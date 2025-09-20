@@ -1,8 +1,15 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { useMyrkat, useVirtualizer } from '@kevindptr/myrkat-sdk'
 import type { Note } from '../types'
 import Fuse from 'fuse.js'
 import {
@@ -85,9 +92,13 @@ export function SearchNotes() {
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (filteredNotes[activeIndex]) {
+        const note = filteredNotes[activeIndex]
         events.publish('note:selected', {
-          ...filteredNotes[activeIndex],
-          content: JSON.stringify(filteredNotes[activeIndex].content),
+          ...note,
+          content:
+            typeof note.content !== 'string'
+              ? JSON.stringify(note.content)
+              : note.content,
         })
 
         setSearch('')
@@ -95,6 +106,19 @@ export function SearchNotes() {
       }
     }
   }
+
+  const [scrollRef, setScrollRef] = useState<HTMLDivElement | null>(null)
+
+  const scrollRefCallback = useCallback((el: HTMLDivElement) => {
+    setScrollRef(el)
+  }, [])
+
+  const virtualizer = useVirtualizer({
+    count: filteredNotes.length,
+    getScrollElement: () => scrollRef,
+    estimateSize: () => 35,
+    overscan: 10,
+  })
 
   return (
     <Fragment>
@@ -129,30 +153,105 @@ export function SearchNotes() {
             <DialogDescription className="h-0!" />
           </DialogHeader>
 
-          <ul ref={listRef} className="w-full px-4 py-3">
-            {filteredNotes.length === 0 && !!search && <p>No results found.</p>}
-            {filteredNotes.map((note, index) => (
-              <li key={note.id} tabIndex={-1} className="focus:outline-none">
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    'w-full justify-start',
-                    index === activeIndex && 'bg-accent text-accent-foreground',
-                  )}
-                  onClick={() => {
-                    events.publish('note:selected', {
-                      ...note,
-                      content: JSON.stringify(note.content),
-                    })
-                    setSearch('')
-                    setOpen(false)
+          <div
+            key={String(open)}
+            ref={scrollRefCallback}
+            className={cn('h-80 overflow-auto', {
+              'h-12': filteredNotes.length === 0,
+            })}
+          >
+            <ul
+              ref={listRef}
+              className="w-full px-4 py-3"
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {filteredNotes.length > 0 ? (
+                virtualizer.getVirtualItems().map((vi, index) => {
+                  const note = filteredNotes[vi.index]
+
+                  return (
+                    <li
+                      key={note.id}
+                      tabIndex={-1}
+                      className="p-2 focus:outline-none"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${vi.size}px`,
+                        transform: `translateY(${vi.start}px)`,
+                      }}
+                    >
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          'w-full justify-start',
+                          index === activeIndex &&
+                            'bg-accent text-accent-foreground',
+                        )}
+                        onClick={() => {
+                          events.publish('note:selected', {
+                            ...note,
+                            content:
+                              typeof note.content !== 'string'
+                                ? JSON.stringify(note.content)
+                                : note.content,
+                          })
+                          setSearch('')
+                          setOpen(false)
+                        }}
+                      >
+                        {note.title}
+                      </Button>
+                    </li>
+                  )
+                })
+              ) : (
+                <li
+                  tabIndex={-1}
+                  className="p-2"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: 32,
+                    transform: `translateY(0)`,
                   }}
                 >
-                  {note.title}
-                </Button>
-              </li>
-            ))}
-          </ul>
+                  No results found.
+                </li>
+              )}
+
+              {/* {filteredNotes.map((note, index) => ( */}
+              {/*   <li key={note.id} tabIndex={-1} className="focus:outline-none"> */}
+              {/*     <Button */}
+              {/*       variant="ghost" */}
+              {/*       className={cn( */}
+              {/*         'w-full justify-start', */}
+              {/*         index === activeIndex && */}
+              {/*           'bg-accent text-accent-foreground', */}
+              {/*       )} */}
+              {/*       onClick={() => { */}
+              {/*         events.publish('note:selected', { */}
+              {/*           ...note, */}
+              {/*           content: JSON.stringify(note.content), */}
+              {/*         }) */}
+              {/*         setSearch('') */}
+              {/*         setOpen(false) */}
+              {/*       }} */}
+              {/*     > */}
+              {/*       {note.title} */}
+              {/*     </Button> */}
+              {/*   </li> */}
+              {/* ))} */}
+            </ul>
+          </div>
         </DialogContent>
       </Dialog>
     </Fragment>
