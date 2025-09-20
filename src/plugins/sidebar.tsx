@@ -174,7 +174,7 @@ export const NotesSidebar = () => {
   const virtualizer = useVirtualizer({
     count: noteTree.length,
     estimateSize: () => 35,
-    overscan: 5,
+    overscan: 10,
     getScrollElement: () => scrollRef.current,
   })
 
@@ -182,10 +182,16 @@ export const NotesSidebar = () => {
 
   useEffect(() => {
     if (activeNoteId) {
-      const element = document.getElementById(activeNoteId)
-      element?.scrollIntoView({
-        behavior: 'smooth',
-      })
+      const indexOfActiveNote = noteTree.findIndex(
+        (pred) => pred.id === activeNoteId,
+      )
+
+      if (indexOfActiveNote > -1) {
+        virtualizer.scrollToIndex(indexOfActiveNote, {
+          behavior: 'smooth',
+          align: 'start',
+        })
+      }
     }
   }, [activeNoteId])
 
@@ -226,6 +232,7 @@ export const NotesSidebar = () => {
 
               return (
                 <div
+                  id={note.id}
                   key={vi.key}
                   data-index={vi.index}
                   ref={virtualizer.measureElement}

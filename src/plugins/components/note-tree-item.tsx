@@ -35,7 +35,7 @@ export interface NoteTree extends Note {
 interface NoteTreeItemProps {
   note: NoteTree
   level?: number
-  createNote: UseMutateFunction<any, Error, string | null | undefined, unknown>
+  createNote: UseMutateFunction<any, Error, string | null, unknown>
   updateNote: UseMutateFunction<
     any,
     Error,
