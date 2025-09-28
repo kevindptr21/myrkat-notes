@@ -12,7 +12,7 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
-import { DialogProvider } from '@/context/dialog-provider'
+import { Toaster } from 'sonner'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -45,14 +45,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <MyrkatProvider>
-          <DialogProvider>{children}</DialogProvider>
+          {children}
+
+          <Toaster />
         </MyrkatProvider>
+
         <TanstackDevtools
           config={{
             position: 'bottom-left',

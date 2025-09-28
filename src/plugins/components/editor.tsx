@@ -4,6 +4,7 @@ import * as locales from '@blocknote/core/locales'
 import {
   BlockNoteSchema,
   combineByGroup,
+  createCodeBlockSpec,
   defaultBlockSpecs,
   filterSuggestionItems,
   withPageBreak,
@@ -25,17 +26,20 @@ import {
   withMultiColumn,
 } from '@blocknote/xl-multi-column'
 import { pdf } from '@react-pdf/renderer'
-import '@excalidraw/excalidraw/index.css'
+import { Note } from '../types'
+import { useMyrkat, useTheme } from '@kevindptr/myrkat-sdk'
+import { codeBlockOptions } from '@blocknote/code-block'
+
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
-import { Note } from '../types'
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import '@excalidraw/excalidraw/index.css'
 
 const schema = withMultiColumn(
   withPageBreak(
     BlockNoteSchema.create({
       blockSpecs: {
         ...defaultBlockSpecs,
+        codeBlock: createCodeBlockSpec(codeBlockOptions),
       },
     }),
   ),
@@ -63,29 +67,6 @@ export const Editor = ({
       cellBackgroundColor: true,
       cellTextColor: true,
       headers: true,
-    },
-    codeBlock: {
-      indentLineWithTab: true,
-      defaultLanguage: 'plain',
-      supportedLanguages: {
-        plain: {
-          name: 'Plain Text',
-          aliases: ['txt'],
-        },
-        typescript: {
-          name: 'Typescript',
-          aliases: ['ts'],
-        },
-        javascript: {
-          name: 'Javascript',
-          aliases: ['js'],
-        },
-        vue: {
-          name: 'Vue',
-          aliases: ['vue'],
-        },
-      },
-      // TODO: highlighter
     },
   })
 
@@ -133,11 +114,21 @@ export const Editor = ({
     return () => events.unsubscribe('note:export-pdf', onDownloadClick)
   }, [note, events])
 
+  const { theme } = useTheme()
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  const isDark = mediaQuery.matches
+
   return (
     <Fragment>
       <BlockNoteView
         editor={editor}
-        theme="light"
+        theme={
+          theme && theme === 'system'
+            ? isDark
+              ? 'dark'
+              : 'light'
+            : (theme! as 'light' | 'dark')
+        }
         onChange={() => {
           onChange(JSON.stringify(editor.document))
         }}

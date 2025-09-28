@@ -1,4 +1,4 @@
-import { createRouter as createTanstackRouter } from '@tanstack/react-router'
+import { createRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 
@@ -6,10 +6,10 @@ import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { routeTree } from './routeTree.gen'
 
 // Create a new router instance
-export const createRouter = () => {
+export const getRouter = () => {
   const rqContext = TanstackQuery.getContext()
 
-  const router = createTanstackRouter({
+  const router = createRouter({
     routeTree,
     context: { ...rqContext },
     defaultPreload: 'intent',
@@ -25,11 +25,4 @@ export const createRouter = () => {
   setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
 
   return router
-}
-
-// Register the router instance for type safety
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: ReturnType<typeof createRouter>
-  }
 }

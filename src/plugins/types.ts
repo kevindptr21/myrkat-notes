@@ -1,4 +1,4 @@
-import type { BaseDocument } from '@/storage/service'
+import { BaseDocument } from '@kevindptr/myrkat-sdk/type'
 
 export interface Note extends BaseDocument {
   title: string

@@ -1,20 +1,20 @@
 import { useMyrkat } from '@kevindptr/myrkat-sdk'
 import React from 'react'
 
-export const SidebarViewPluginRenderer = () => {
+export const PluginRenderer = () => {
   const { plugins } = useMyrkat()
-  const sidebarComponents = plugins
+  const components = plugins
     .getPlugins()
-    .map((p) => p.sidebarComponent)
+    .map((p) => p.component)
     .filter(Boolean)
 
-  if (sidebarComponents.length === 0) {
-    return <div>No sidebar plugins loaded.</div>
+  if (components.length === 0) {
+    return <div>No main plugins loaded.</div>
   }
 
   return (
     <>
-      {sidebarComponents.map((Component, index) => (
+      {components.map((Component, index) => (
         <React.Fragment key={index}>
           {Component && <Component />}
         </React.Fragment>

@@ -1,8 +1,7 @@
 // @apps/web/src/plugins/notes-plugin/index.ts
-import { NotesSidebar } from './sidebar'
-import { NotesMainView } from './main'
 import type { PluginManager } from '@kevindptr/myrkat-sdk'
 import { NotesLogo } from './logo'
+import { MyrkatNotes } from './myrkat-notes'
 
 /**
  * Registers the Notes Plugin and its components.
@@ -13,14 +12,8 @@ export function register(pluginManager: PluginManager) {
     id: 'myrkat-notes',
     name: 'Myrkat Notes',
     logo: NotesLogo,
-    sidebarComponent: NotesSidebar,
-    mainComponent: NotesMainView,
+    component: MyrkatNotes,
   })
-  // // Register the sidebar component
-  // pluginManager.registerSidebarComponent('notes-sidebar', NotesSidebar)
-  //
-  // // Register the main view component
-  // pluginManager.registerMainViewComponent('notes-main-view', NotesMainView)
 
   console.log('Notes Plugin registered!')
 }
