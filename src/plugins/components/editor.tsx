@@ -27,7 +27,7 @@ import {
 } from '@blocknote/xl-multi-column'
 import { pdf } from '@react-pdf/renderer'
 import { Note } from '../types'
-import { useMyrkat, useTheme } from '@kevindptr/myrkat-sdk'
+import { useMyrkat, useTheme } from '@kevindptr/myrkat-sdk/hooks'
 import { codeBlockOptions } from '@blocknote/code-block'
 
 import '@blocknote/core/fonts/inter.css'
@@ -132,6 +132,7 @@ export const Editor = ({
         onChange={() => {
           onChange(JSON.stringify(editor.document))
         }}
+        className="[--bn-colors-editor-background:bg-background]!"
       >
         <SuggestionMenuController
           triggerCharacter={'/'}

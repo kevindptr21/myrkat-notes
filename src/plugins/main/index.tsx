@@ -1,4 +1,4 @@
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileTextIcon, NotebookPenIcon, WorkflowIcon } from 'lucide-react'
@@ -137,7 +137,7 @@ export const MyrkatNotesMain = () => {
 
   if (!selectedNote) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-500">
+      <div className="flex flex-1 items-center justify-center p-4 text-gray-500">
         Select a note from the sidebar to start editing.
       </div>
     )

@@ -9,19 +9,23 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
 } from '@/components/ui/sidebar'
+
 import {
   UseMutateFunction,
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useMyrkat, useVirtualizer } from '@kevindptr/myrkat-sdk'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Note } from '../types'
 import { StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'
@@ -30,7 +34,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { NoteTree } from '../components/note-tree-item'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -43,6 +46,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { useVirtualizer } from '@kevindptr/myrkat-sdk'
+import { Input } from '@/components/ui/input'
+
+export interface NoteTree extends Note {
+  children?: Array<NoteTree>
+}
 
 const buildNoteTree = (notes: Array<Note>): Array<NoteTree> => {
   const noteMap = new Map<string, NoteTree>()
@@ -67,7 +76,10 @@ export function MyrkatNotesSidebar() {
   const queryClient = useQueryClient()
   const { events } = useMyrkat()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
+
+  // TODO: Expand the selected note
   const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(new Set())
+  const [isHovered, setIsHovered] = useState(false)
 
   const { data: notes } = useSuspenseQuery({
     queryKey: ['notes'],
@@ -153,8 +165,8 @@ export function MyrkatNotesSidebar() {
 
   const virtualizer = useVirtualizer({
     count: noteTree.length,
-    estimateSize: () => 35,
-    overscan: 10,
+    estimateSize: () => 32,
+    overscan: 20,
     getScrollElement: () => scrollRef.current,
   })
 
@@ -169,7 +181,7 @@ export function MyrkatNotesSidebar() {
       if (indexOfActiveNote > -1) {
         virtualizer.scrollToIndex(indexOfActiveNote, {
           behavior: 'smooth',
-          align: 'start',
+          align: 'center',
         })
       }
     }
@@ -177,43 +189,67 @@ export function MyrkatNotesSidebar() {
 
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
-      <SidebarContent ref={scrollRef}>
+      <SidebarHeader
+        className="flex flex-row items-center justify-between"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <span>Notes</span>
+        {isHovered && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-fit w-fit p-0"
+            onClick={() => createNote(null)}
+          >
+            <PlusIcon />
+          </Button>
+        )}
+      </SidebarHeader>
+      <SidebarContent>
         <SidebarGroup
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
+          ref={scrollRef}
+          className="scrollbar h-[80rem] overflow-auto"
         >
           <SidebarGroupContent
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
+              height: virtualizer.getTotalSize(),
               width: '100%',
-              // minHeight: 200,
-              transform: `translateY(${virtualItems?.[0]?.start}px)`,
+              position: 'relative',
             }}
           >
-            {virtualItems.map((vi) => {
-              const note = noteTree[vi.index]
+            <SidebarMenu
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItems[0]?.start ?? 0}px)`,
+              }}
+            >
+              {virtualItems.map((vi) => {
+                const note = noteTree[vi.index]
 
-              return (
-                <Tree
-                  key={note.id}
-                  item={note}
-                  activeNoteId={activeNoteId}
-                  createNote={createNote}
-                />
-              )
-            })}
-
-            {/* {noteTree.map((note) => ( */}
-            {/*   <Tree key={note.id} item={note} activeNoteId={activeNoteId} /> */}
-            {/* ))} */}
+                return (
+                  <div
+                    id={note.id}
+                    key={vi.key}
+                    data-index={vi.index}
+                    ref={virtualizer.measureElement}
+                  >
+                    <Tree
+                      item={note}
+                      activeNoteId={activeNoteId}
+                      createNote={createNote}
+                    />
+                  </div>
+                )
+              })}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter />
     </Sidebar>
   )
 }
@@ -278,7 +314,7 @@ function Tree({
   if (!hasChildren) {
     return (
       <div
-        className="hover:bg-accent flex justify-between gap-2"
+        className="hover:bg-accent flex items-center justify-between gap-2"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -289,7 +325,25 @@ function Tree({
           onDoubleClick={() => setIsEditing(true)}
         >
           <FileIcon />
-          <span className="truncate">{item.title}</span>
+          {isEditing ? (
+            <Input
+              ref={inputRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSave()
+                if (e.key === 'Escape') {
+                  setTitle(item.title)
+                  setIsEditing(false)
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="h-fit py-1"
+            />
+          ) : (
+            <span className="truncate">{item.title}</span>
+          )}
         </SidebarMenuButton>
         <NoteActionHover
           item={item}
@@ -326,13 +380,31 @@ function Tree({
               </SidebarMenuButton>
             </CollapsibleTrigger>
 
-            <span
-              className="truncate"
-              onClick={handleNoteSelect}
-              onDoubleClick={() => setIsEditing(true)}
-            >
-              {item.title}
-            </span>
+            {isEditing ? (
+              <Input
+                ref={inputRef}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave()
+                  if (e.key === 'Escape') {
+                    setTitle(item.title)
+                    setIsEditing(false)
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="h-fit py-1"
+              />
+            ) : (
+              <span
+                className="truncate"
+                onClick={handleNoteSelect}
+                onDoubleClick={() => setIsEditing(true)}
+              >
+                {item.title}
+              </span>
+            )}
           </div>
           <NoteActionHover
             isHovered={isHovered}
@@ -389,13 +461,14 @@ const NoteActionHover = ({
 
   return (
     <div
-      className={cn('hidden grid-cols-2 px-2', {
+      className={cn('hidden grid-cols-2 gap-3 px-2', {
         grid: isHovered,
       })}
     >
       <Button
         variant="ghost"
         size="icon"
+        className="h-fit w-fit p-0"
         onClick={(e) => {
           e.stopPropagation()
           createNote(item.id)
@@ -411,6 +484,7 @@ const NoteActionHover = ({
           <Button
             variant="ghost"
             size="icon"
+            className="h-fit w-fit p-0"
             onClick={(e) => {
               e.stopPropagation()
             }}

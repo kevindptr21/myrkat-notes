@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTheme } from '@kevindptr/myrkat-sdk'
+import { useTheme } from '@kevindptr/myrkat-sdk/hooks'
 
 export function ThemeToggle() {
   const { setTheme } = useTheme()

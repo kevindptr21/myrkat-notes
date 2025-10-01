@@ -3,20 +3,12 @@ import { cn } from '@/lib/utils'
 import { Search, SidebarIcon } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Separator } from '@/components/ui/separator'
-import { useMyrkat, useSearch, useSidebar } from '@kevindptr/myrkat-sdk'
-import { FC, useEffect, useState } from 'react'
+import { useSearch } from '@kevindptr/myrkat-sdk/hooks'
+import { useSidebar } from '@/components/ui/sidebar'
 
 export const Menu = () => {
   const { toggleSidebar } = useSidebar()
   const { open: openSearch, setOpen: setOpenSearch } = useSearch()
-  // const { plugins } = useMyrkat()
-  // const [MenubarPlugin, setMenuBarPlugin] = useState<FC | null>(null)
-  //
-  // useEffect(() => {
-  //   if (activePlugin) {
-  //     setMenuBarPlugin(plugins.getMenu(activePlugin.id))
-  //   }
-  // }, [activePlugin])
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">

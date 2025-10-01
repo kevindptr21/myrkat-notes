@@ -1,4 +1,4 @@
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
 import React from 'react'
 
 export const PluginRenderer = () => {

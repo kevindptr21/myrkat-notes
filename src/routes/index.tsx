@@ -1,15 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { useMyrkat } from '@kevindptr/myrkat-sdk'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
 import { FileService } from '@kevindptr/myrkat-sdk/storage'
 import { BaseDocument, StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'
-import { Fragment, useEffect } from 'react'
+import { useEffect } from 'react'
 import { loadAndRegisterPlugins } from '@/lib/plugin-loader'
 import { Menu } from '@/features/menu'
 import { PluginRenderer } from '@/features/plugin-renderer'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { SiteHeader } from '@/components/site-header'
-import { AppSidebar } from '@/components/app-sidebar'
+import { SidebarProvider } from '@/components/ui/sidebar'
 
 const service = new FileService('myrkat-data')
 
@@ -81,12 +79,12 @@ function App() {
   // )
 
   return (
-    <Fragment>
+    <SidebarProvider className="flex flex-col">
       <Menu />
       <div className="flex flex-1">
         <PluginRenderer />
       </div>
-    </Fragment>
+    </SidebarProvider>
   )
 
   // deprecated

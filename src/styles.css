@@ -74,6 +74,41 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .overflow-auto::-webkit-scrollbar,
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-x-auto::-webkit-scrollbar {
+    width: 0px; /* hides scrollbar completely */
+    height: 0px;
+    transition:
+      width 0.3s ease,
+      height 0.3s ease;
+  }
+
+  /* On hover or active scroll, show it */
+  .overflow-auto:hover::-webkit-scrollbar,
+  .overflow-y-auto:hover::-webkit-scrollbar,
+  .overflow-x-auto:hover::-webkit-scrollbar,
+  .overflow-auto:active::-webkit-scrollbar,
+  .overflow-y-auto:active::-webkit-scrollbar,
+  .overflow-x-auto:active::-webkit-scrollbar {
+    width: 4px; /* visible size */
+    height: 4px;
+  }
 }
 
 .dark {
