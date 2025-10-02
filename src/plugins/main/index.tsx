@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { SidebarInset } from '@/components/ui/sidebar'
+import { SidebarInset } from '@kevindptr/myrkat-sdk/ui'
 import { Note } from '../types'
 import { Editor } from '../components/editor'
 import { StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'

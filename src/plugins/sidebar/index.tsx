@@ -17,24 +17,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-} from '@/components/ui/sidebar'
+} from '@kevindptr/myrkat-sdk/ui'
 
-import {
-  UseMutateFunction,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
-import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Note } from '../types'
-import { StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'
+import { Button } from '@/components/ui/button'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -45,9 +35,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useVirtualizer } from '@kevindptr/myrkat-sdk'
-import { Input } from '@/components/ui/input'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
+import { StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'
+import {
+  UseMutateFunction,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Note } from '../types'
 
 export interface NoteTree extends Note {
   children?: Array<NoteTree>
@@ -165,8 +165,8 @@ export function MyrkatNotesSidebar() {
 
   const virtualizer = useVirtualizer({
     count: noteTree.length,
-    estimateSize: () => 32,
-    overscan: 20,
+    estimateSize: () => 48,
+    overscan: 10,
     getScrollElement: () => scrollRef.current,
   })
 
@@ -179,18 +179,20 @@ export function MyrkatNotesSidebar() {
       )
 
       if (indexOfActiveNote > -1) {
+        virtualizer.measure()
+
         virtualizer.scrollToIndex(indexOfActiveNote, {
           behavior: 'smooth',
-          align: 'center',
+          align: indexOfActiveNote === noteTree.length - 1 ? 'end' : 'center',
         })
       }
     }
-  }, [activeNoteId])
+  }, [activeNoteId, noteTree.length])
 
   return (
-    <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
+    <Sidebar>
       <SidebarHeader
-        className="flex flex-row items-center justify-between"
+        className="flex! flex-row! items-center! justify-between!"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -199,7 +201,7 @@ export function MyrkatNotesSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-fit w-fit p-0"
+            className="h-fit! w-fit! p-0!"
             onClick={() => createNote(null)}
           >
             <PlusIcon />
@@ -207,13 +209,10 @@ export function MyrkatNotesSidebar() {
         )}
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup
-          ref={scrollRef}
-          className="scrollbar h-[80rem] overflow-auto"
-        >
+        <SidebarGroup ref={scrollRef} className="h-[80rem]! overflow-auto">
           <SidebarGroupContent
             style={{
-              height: virtualizer.getTotalSize(),
+              height: `${virtualizer.getTotalSize()}px`,
               width: '100%',
               position: 'relative',
             }}
@@ -366,7 +365,7 @@ function Tree({
           <div className="flex items-center gap-2 truncate">
             <CollapsibleTrigger asChild>
               <SidebarMenuButton
-                className="w-fit"
+                className="w-fit!"
                 isActive={activeNoteId === item.id}
               >
                 {isHovered ? (
@@ -413,7 +412,7 @@ function Tree({
           />
         </div>
         <CollapsibleContent>
-          <SidebarMenuSub className="mr-0 pr-0">
+          <SidebarMenuSub className="mr-0! pr-0!">
             {children.map((subItem, index) => (
               <Tree
                 key={index}
@@ -468,13 +467,11 @@ const NoteActionHover = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-fit w-fit p-0"
+        className="h-fit! w-fit! p-0!"
         onClick={(e) => {
           e.stopPropagation()
           createNote(item.id)
-          // onToggleExpand(note.id)
         }}
-        // className="h-fit w-fit rounded-sm p-1!"
       >
         <PlusIcon className="size-4" />
       </Button>
@@ -484,7 +481,7 @@ const NoteActionHover = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-fit w-fit p-0"
+            className="h-fit! w-fit! p-0!"
             onClick={(e) => {
               e.stopPropagation()
             }}

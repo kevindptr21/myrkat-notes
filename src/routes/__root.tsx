@@ -1,11 +1,11 @@
+import { MyrkatProvider } from '@kevindptr/myrkat-sdk'
+import { TanstackDevtools } from '@tanstack/react-devtools'
 import {
-  HeadContent,
-  Scripts,
-  createRootRouteWithContext,
+    HeadContent,
+    Scripts,
+    createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanstackDevtools } from '@tanstack/react-devtools'
-import { MyrkatProvider } from '@kevindptr/myrkat-sdk'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
@@ -52,7 +52,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <MyrkatProvider>
           {children}
-
           <Toaster />
         </MyrkatProvider>
 
