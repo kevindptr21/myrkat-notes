@@ -1,6 +1,4 @@
-import { Fragment, useEffect, useMemo } from 'react'
-import { BlockNoteView } from '@blocknote/mantine'
-import * as locales from '@blocknote/core/locales'
+import { codeBlockOptions } from '@blocknote/code-block'
 import {
   BlockNoteSchema,
   combineByGroup,
@@ -9,6 +7,8 @@ import {
   filterSuggestionItems,
   withPageBreak,
 } from '@blocknote/core'
+import * as locales from '@blocknote/core/locales'
+import { BlockNoteView } from '@blocknote/shadcn'
 import {
   getDefaultReactSlashMenuItems,
   getPageBreakReactSlashMenuItems,
@@ -16,23 +16,22 @@ import {
   useCreateBlockNote,
 } from '@blocknote/react'
 import {
-  PDFExporter,
-  pdfDefaultSchemaMappings,
-} from '@blocknote/xl-pdf-exporter'
-import {
   getMultiColumnSlashMenuItems,
   multiColumnDropCursor,
   locales as multiColumnLocales,
   withMultiColumn,
 } from '@blocknote/xl-multi-column'
-import { pdf } from '@react-pdf/renderer'
-import { Note } from '../types'
+import {
+  pdfDefaultSchemaMappings,
+  PDFExporter,
+} from '@blocknote/xl-pdf-exporter'
 import { useMyrkat, useTheme } from '@kevindptr/myrkat-sdk/hooks'
-import { codeBlockOptions } from '@blocknote/code-block'
+import { pdf } from '@react-pdf/renderer'
+import { Fragment, useEffect, useMemo } from 'react'
+import { Note } from '../types'
 
 import '@blocknote/core/fonts/inter.css'
-import '@blocknote/mantine/style.css'
-import '@excalidraw/excalidraw/index.css'
+import '@blocknote/shadcn/style.css'
 
 const schema = withMultiColumn(
   withPageBreak(

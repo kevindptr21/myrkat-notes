@@ -1,24 +1,23 @@
-import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { FileTextIcon, NotebookPenIcon, WorkflowIcon } from 'lucide-react'
-import { useDebounceCallback } from '@/hooks/use-debounce-callback'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
-import '@excalidraw/excalidraw/index.css'
-import '@blocknote/core/fonts/inter.css'
-import '@blocknote/mantine/style.css'
-import { Button } from '@/components/ui/button'
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
-import { SidebarInset } from '@kevindptr/myrkat-sdk/ui'
-import { Note } from '../types'
-import { Editor } from '../components/editor'
+import { useDebounceCallback } from '@/hooks/use-debounce-callback'
+// import { cn } from '@/lib/utils'
+import { useMyrkat } from '@kevindptr/myrkat-sdk/hooks'
 import { StorageRequestPayload } from '@kevindptr/myrkat-sdk/type'
+import { Button, SidebarInset } from '@kevindptr/myrkat-sdk/ui'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { FileTextIcon, NotebookPenIcon, WorkflowIcon } from 'lucide-react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Editor } from '../components/editor'
+import { Note } from '../types'
+
+import '@excalidraw/excalidraw/index.css'
+import { ButtonGroup } from '@/components/ui/button-group'
 
 // Dynamically import Excalidraw only on the client side
 const Excalidraw = lazy(() =>
@@ -147,64 +146,79 @@ export const MyrkatNotesMain = () => {
 
   return (
     <SidebarInset>
-      <div className="flex flex-1 flex-col gap-4 p-4">
-        <Tabs
-          value={activeTab}
-          className="relative grid h-full grid-cols-[auto_1fr]"
-          onValueChange={(value) => {
-            setNoteTabStates((prev) => ({
-              ...prev,
-              [selectedNote.id]: value as 'editor' | 'excalidraw',
-            }))
-          }}
-        >
-          <div className="flex flex-col">
-            <TabsList className="sticky top-18 flex h-fit flex-col gap-2 space-x-0 p-1">
-              <TabsTrigger value="editor">
-                <NotebookPenIcon />
-              </TabsTrigger>
-              <TabsTrigger value="excalidraw">
-                <WorkflowIcon />
-              </TabsTrigger>
-            </TabsList>
-
-            <Tooltip>
-              <TooltipTrigger
-                className={cn('sticky top-36 hidden', {
-                  block: activeTab === 'editor',
-                })}
-                asChild
+      <style lang="jsx">{`
+        .bn-block-content[data-content-type=codeBlock]>pre { white-space: unset; }
+        `}</style>
+      <div className="grid grow grid-cols-[minmax(20px,50px)_repeat(auto-fit,minmax(250px,1fr))] gap-2 p-4">
+        <ButtonGroup orientation="vertical">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                  setNoteTabStates((prev) => ({
+                    ...prev,
+                    [selectedNote.id]: 'editor',
+                  }))
+                }
               >
-                <Button
-                  variant="outline"
-                  className="rounded-md"
-                  onClick={() => events.publish('note:export-pdf')}
-                >
-                  <FileTextIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <span>Export PDF</span>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+                <NotebookPenIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Notes</TooltipContent>
+          </Tooltip>
 
-          <TabsContent value="editor" className="block h-full">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                  setNoteTabStates((prev) => ({
+                    ...prev,
+                    [selectedNote.id]: 'excalidraw',
+                  }))
+                }
+              >
+                <WorkflowIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Flow</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => events.publish('note:export-pdf')}
+              >
+                <FileTextIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export PDF</TooltipContent>
+          </Tooltip>
+        </ButtonGroup>
+
+        <div className="w-full">
+          {activeTab === 'editor' && (
             <Editor
               key={selectedNote.id}
               note={selectedNote}
               onChange={handleContentChange}
             />
-          </TabsContent>
-          <TabsContent value="excalidraw" className="block h-full">
+          )}
+
+          {activeTab === 'excalidraw' && (
             <ExcalidrawComponent
               key={selectedNote.id}
               note={selectedNote}
               onChange={handleExcalidrawChange}
               onLibraryChange={handleExcalidrawLibraryChange}
             />
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
     </SidebarInset>
   )

@@ -1,9 +1,9 @@
 import { MyrkatProvider } from '@kevindptr/myrkat-sdk'
 import { TanstackDevtools } from '@tanstack/react-devtools'
 import {
-    HeadContent,
-    Scripts,
-    createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
